@@ -6,6 +6,13 @@ const App = () => {
 
   console.log('App renders');
 
+  const [searchTerm, setSearchTerm] = React.useState('React');
+
+  const handleSearch = (event) => {
+    console.log("In App!");
+    setSearchTerm(event.target.value);
+  };
+
   const stories = [
     {
       title: 'React',
@@ -25,69 +32,64 @@ const App = () => {
     }
   ];
 
+  const searchedStories = stories.filter((story) =>
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+
+
   return (
     <>
       <h1>My Hacker Stories</h1>
-      <Search />
+      <Search search={searchTerm} onSearch={handleSearch} />
       <hr />
-      <List list={stories} />
+      <p>
+        Searching for <strong>{searchTerm}</strong>.
+      </p>
+
+      <hr />
+      <List list={searchedStories} />
 
     </>
   )
 };
 
-const Search = () => {
+const Search = ({ search, onSearch }) => {
   console.log('Search renders');
-
-  const [searchTerm, setSearchTerm] = React.useState('');
-
-  const handleChange = (event) => {
-    // synthetic event
-    console.log(event);
-    // value of target (here: input HTML element)
-    console.log(event.target.value);
-    setSearchTerm(event.target.value);
-  };
-
-  const handleOnBlur = (event) => {
-    console.log(event);
-    console.log(event.target.value);
-  }
 
   return (
     <>
       <label htmlFor="search">Search: </label>
-      <input id="search" type="text" onChange={handleChange} onBlur={handleOnBlur} />
-
-
-      <p>
-        Searching for <strong>{searchTerm}</strong>.
-      </p>
-
+      <input
+        id="search"
+        type="text"
+        value={search}
+        onChange={onSearch}
+      />
     </>
   );
 };
 
-const List = (props) => {
+const List = ({ list }) => {
   console.log('List renders');
 
   return (
     <ul>
-      {props.list.map((item) => (
-        <Item key={item.objectID} item={item} />
+      {list.map(({ objectID, ...item }) => (
+        <Item key={objectID}  {...item} />
       ))}
     </ul>
   );
 };
 
-const Item = (props) => (
+const Item = ({ title, url, author, num_comments, points }) => (
   <li>
     <span>
-      <a href={props.item.url}>{props.item.title}</a>
+      <a href={url}>{title}</a>&nbsp;
     </span>
-    <span>{props.item.author}</span>
-    <span>{props.item.num_comments}</span>
-    <span>{props.item.points}</span>
+    <span>{author}</span>
+    <span>{num_comments}</span>
+    <span>{points}</span>
   </li>
 );
 
