@@ -2,16 +2,19 @@
 import './App.css'
 import * as React from 'react';
 
+
+const useStorageState = (key, initialState) => {
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
+  );
+  React.useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+  return [value, setValue];
+};
+
+
 const App = () => {
-
-  console.log('App renders');
-
-  const [searchTerm, setSearchTerm] = React.useState('React');
-
-  const handleSearch = (event) => {
-    console.log("In App!");
-    setSearchTerm(event.target.value);
-  };
 
   const stories = [
     {
@@ -32,10 +35,25 @@ const App = () => {
     }
   ];
 
+  console.log('App renders');
+
+  const [searchTerm, setSearchTerm] = useStorageState('search1','React');
+
+  // const [searchTerm, setSearchTerm] = React.useState(localStorage.getItem('search') || 'React');
+
+  // React.useEffect(() => {
+  //   localStorage.setItem('search', searchTerm);
+  // }, [searchTerm]);
+
+
+
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
   const searchedStories = stories.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
 
 
   return (
