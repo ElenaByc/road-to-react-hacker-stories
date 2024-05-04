@@ -13,32 +13,8 @@ const useStorageState = (key, initialState) => {
   return [value, setValue];
 };
 
-const initialStories = [
-  {
-    title: 'React',
-    url: 'https://reactjs.org/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: 'Redux',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-];
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
-const getAsyncStories = () =>
-  new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ data: { stories: initialStories } }),
-      2000
-    )
-  );
 
 const storiesReducer = (state, action) => {
   console.log('state = ', state);
@@ -82,28 +58,44 @@ const App = () => {
   console.log('App renders');
 
   const [searchTerm, setSearchTerm] = useStorageState('search', 'React');
+
+  const [url, setUrl] = React.useState(
+    `${API_ENDPOINT}${searchTerm}`
+  );
+
   const [stories, dispatchStories] = React.useReducer(
     storiesReducer,
     { data: [], isLoading: false, isError: false }
   );
 
-  React.useEffect(() => {
+  const handleFetchStories = React.useCallback(() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
-    getAsyncStories().then(result => {
-      dispatchStories({
-        type: 'STORIES_FETCH_SUCCESS',
-        payload: result.data.stories,
-      });
-    })
+    fetch(url)
+      .then((response) => response.json())
+      .then(result => {
+        dispatchStories({
+          type: 'STORIES_FETCH_SUCCESS',
+          payload: result.hits,
+        });
+      })
       .catch(() =>
         dispatchStories({ type: 'STORIES_FETCH_FAILURE' })
       );
 
-  }, []);
+  }, [url]);
 
-  const handleSearch = (event) => {
+  React.useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
+
+
+  const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
   };
 
   const handleRemoveStory = (item) => {
@@ -113,10 +105,6 @@ const App = () => {
     });
   };
 
-  const searchedStories = stories.data.filter((story) =>
-    story.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <>
       <h1>My Hacker Stories</h1>
@@ -124,27 +112,37 @@ const App = () => {
         id="search"
         value={searchTerm}
         isFocused
-        onInputChange={handleSearch}
+        onInputChange={handleSearchInput}
       >
         <strong>Search:</strong>
       </InputWithLabel>
+      <button
+        type="button"
+        disabled={!searchTerm}
+        onClick={handleSearchSubmit}
+      >
+        Submit
+      </button >
       <hr />
       {stories.isError && <p>Something went wrong ...</p>}
-      {stories.isLoading ? (
-        <p>Loading ...</p>
-      ) : (
-        <>
-          <p>
-            Searching for <strong>{searchTerm}</strong>
-          </p>
+      {
+        stories.isLoading ? (
+          <p>Loading ...</p>
+        ) : (
+          <>
+            <p>
+              Searching for <strong>{searchTerm}</strong>
+            </p>
 
-          <hr />
-          <List
-            list={searchedStories}
-            onRemoveItem={handleRemoveStory}
-          />
-        </>
-      )}
+            <hr />
+
+            <List
+              list={stories.data}
+              onRemoveItem={handleRemoveStory}
+            />
+          </>
+        )
+      }
     </>
   );
 };
