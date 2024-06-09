@@ -3,6 +3,7 @@
 import styles from './App.module.css';
 import * as React from 'react';
 import axios from 'axios';
+import Check from './assets/check.svg?react';
 
 
 const useStorageState = (key, initialState) => {
@@ -234,7 +235,7 @@ const Item = ({ item, onRemoveItem }) => {
           type="button"
           onClick={() => onRemoveItem(item)}
           className={`${styles.button} ${styles.buttonSmall}`}>
-          Dismiss
+          <Check height="18px" width="18px" />
         </button>
       </span>
 
